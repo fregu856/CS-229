@@ -27,15 +27,15 @@ class CartPoleEnv(gym.Env):
     def __init__(self):
         self.g = 9.81 # gravity constant
         self.m0 = 1.0 # mass of cart
-        self.m1 = 0.1 # mass of pole 1
-        self.m2 = 0.1 # mass of pole 2
+        self.m1 = 0.5 # mass of pole 1
+        self.m2 = 0.5 # mass of pole 2
         self.L1 = 1 # length of pole 1
         self.L2 = 1 # length of pole 2
         self.l1 = self.L1/2 # distance from pivot point to center of mass
         self.l2 = self.L2/2 # distance from pivot point to center of mass
         self.I1 = self.m1*(self.L1^2)/12 # moment of inertia of pole 1 w.r.t its center of mass
         self.I2 = self.m2*(self.L2^2)/12 # moment of inertia of pole 2 w.r.t its center of mass
-        self.tau = 0.01  # seconds between state updates
+        self.tau = 0.02  # seconds between state updates
 
         # Angle at which to fail the episode
         #self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -52,7 +52,7 @@ class CartPoleEnv(gym.Env):
 
         #self.action_space = spaces.Discrete(2)
         # # (continuous action space)
-        self.action_space = spaces.Box(low=-100, high=100, shape=(1,))
+        self.action_space = spaces.Box(low=-1, high=1, shape=(1,))
         self.observation_space = spaces.Box(-high, high)
 
         self._seed()
@@ -106,15 +106,9 @@ class CartPoleEnv(gym.Env):
         B_tilde = np.bmat([[O_3_1],[np.linalg.inv(D)*H]])
         W = np.bmat([[O_3_1],[np.linalg.inv(D)*G]])
                 
-                
-        
-        
-        
-        x  = x + self.tau * x_dot
-        x_dot = x_dot + self.tau * xacc
-        theta = theta + self.tau * theta_dot
-        theta_dot = theta_dot + self.tau * thetaacc
-        self.state = (x,x_dot,theta,theta_dot)
+        state_dot = A_tilde*state + B_tilde*u + W        
+        state = state + self.tau*state_dot
+        self.state = state
         
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
@@ -137,7 +131,7 @@ class CartPoleEnv(gym.Env):
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(6,))
+        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(6,1))
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -205,10 +199,10 @@ class CartPoleEnv(gym.Env):
             self.track.set_color(0,0,0)
             self.viewer.add_geom(self.track)
 
-        x = self.state
-        cartx = x[0]*scale+screen_width/2.0 # MIDDLE OF CART
+        state = self.state
+        cartx = state[0]*scale+screen_width/2.0 # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(-x[2])
-        self.poletrans2.set_rotation(-x[2])
+        self.poletrans.set_rotation(-state[2])
+        self.poletrans2.set_rotation(-state[4])
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')

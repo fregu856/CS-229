@@ -130,23 +130,12 @@ class CartPoleEnv(gym.Env):
         self.state = state
         
         done =  x < -self.x_threshold \
-                or x > self.x_threshold \
-                or theta < -self.theta_threshold_radians \
-                or theta > self.theta_threshold_radians
+                or x > self.x_threshold 
         done = bool(done)
 
-        if not done:
-            reward = 1.0
-        elif self.steps_beyond_done is None:
-            # Pole just fell!
-            self.steps_beyond_done = 0
-            reward = 1.0
-        else:
-            if self.steps_beyond_done == 0:
-                logger.warn("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
-            self.steps_beyond_done += 1
-            reward = 0.0
-
+        cost = normalize_angle(theta)**2 + 0.1*theta_dot**2 + normalize_angle(phi)**2 + 0.1*phi_dot**2
+        reward = -cost
+        
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
@@ -225,3 +214,15 @@ class CartPoleEnv(gym.Env):
         self.poletrans2.set_rotation(-state[4])
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
+        
+def normalize_angle(angle):
+    """
+    3*pi gives -pi, 4*pi gives 0 etc, etc. (returns the negative difference
+    from the closest multiple of 2*pi)
+    """
+    normalized_angle = abs(angle)
+    normalized_angle = normalized_angle % (2*np.pi)
+    if normalized_angle > np.pi:
+        normalized_angle = normalized_angle - 2*np.pi
+    normalized_angle = abs(normalized_angle)
+    return normalized_angle

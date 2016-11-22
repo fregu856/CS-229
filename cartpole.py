@@ -38,6 +38,7 @@ class CartPoleEnv(gym.Env):
         self.I1 = self.m1*(self.L1^2)/12 # moment of inertia of pole 1 w.r.t its center of mass
         self.I2 = self.m2*(self.L2^2)/12 # moment of inertia of pole 2 w.r.t its center of mass
         self.tau = 0.02  # seconds between state updates
+        self.counter = 0
 
         # Angle at which to fail the episode
         #self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -52,16 +53,14 @@ class CartPoleEnv(gym.Env):
             self.theta_threshold_radians * 2,
             np.finfo(np.float32).max])
 
-        #self.action_space = spaces.Discrete(2)
+        self.action_space = spaces.Discrete(3)
         # # (continuous action space)
-        self.action_space = spaces.Box(low=-0.1, high=0.1, shape=(1,))
+        #self.action_space = spaces.Box(low=-0.1, high=0.1, shape=(1,))
         self.observation_space = spaces.Box(-high, high)
 
         self._seed()
         self.reset()
         self.viewer = None
-
-        self.steps_beyond_done = None
 
         # Just need to initialize the relevant attributes
         self._configure()
@@ -78,6 +77,7 @@ class CartPoleEnv(gym.Env):
         state = self.state
         x, x_dot, theta, theta_dot, phi, phi_dot = state
         u = action
+        self.counter += 1
         
         # (state_dot = func(state))
         def func(t, state, u):
@@ -130,17 +130,19 @@ class CartPoleEnv(gym.Env):
         self.state = state
         
         done =  x < -self.x_threshold \
-                or x > self.x_threshold 
+                or x > self.x_threshold \
+                or self.counter > 1000
         done = bool(done)
 
-        cost = normalize_angle(theta)**2 + 0.1*theta_dot**2 + normalize_angle(phi)**2 + 0.1*phi_dot**2
+        cost = normalize_angle(theta)**2 + 0.1*theta_dot**2 + \
+                normalize_angle(phi)**2 + 0.1*phi_dot**2
         reward = -cost
         
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(6,1))
-        self.steps_beyond_done = None
+        self.counter = 0
         return np.array(self.state)
 
     def _render(self, mode='human', close=False):

@@ -25,15 +25,17 @@ class CartPoleEnv(gym.Env):
     }
 
     def __init__(self):
-        self.gravity = 9.8
-        self.masscart = 1.0
-        self.masspole = 0.1
-        self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.5 # actually half the pole's length
-        self.polemass_length = (self.masspole * self.length)
-        # #
-        #self.force_mag = 10.0
-        self.tau = 0.02  # seconds between state updates
+        self.g = 9.81 # gravity constant
+        self.m0 = 1.0 # mass of cart
+        self.m1 = 0.1 # mass of pole 1
+        self.m2 = 0.1 # mass of pole 2
+        self.L1 = 1 # length of pole 1
+        self.L2 = 1 # length of pole 2
+        self.l1 = self.L1/2 # distance from pivot point to center of mass
+        self.l2 = self.L2/2 # distance from pivot point to center of mass
+        self.I1 = self.m1*(self.L1^2)/12 # moment of inertia of pole 1 w.r.t its center of mass
+        self.I2 = self.m2*(self.L2^2)/12 # moment of inertia of pole 2 w.r.t its center of mass
+        self.tau = 0.01  # seconds between state updates
 
         # Angle at which to fail the episode
         #self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -72,20 +74,48 @@ class CartPoleEnv(gym.Env):
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         state = self.state
-        x, x_dot, theta, theta_dot = state
-        #force = self.force_mag if action==1 else -self.force_mag
-        # #
-        force = action
-        costheta = math.cos(theta)
-        sintheta = math.sin(theta)
-        temp = (force + self.polemass_length * theta_dot * theta_dot * sintheta) / self.total_mass
-        thetaacc = (self.gravity * sintheta - costheta* temp) / (self.length * (4.0/3.0 - self.masspole * costheta * costheta / self.total_mass))
-        xacc  = temp - self.polemass_length * thetaacc * costheta / self.total_mass
+        x, x_dot, theta, theta_dot, phi, phi_dot = state
+        u = action
+        
+        d1 = self.m0 + self.m1 + self.m2
+        d2 = self.m1*self.l1 + self.m2*self.L1
+        d3 = self.m2*self.l2
+        d4 = self.m1*pow(self.l1,2) + self.m2*pow(self.L1,2) + self.I1
+        d5 = self.m2*self.L1*self.l2
+        d6 = self.m2*pow(self.l2,2) + self.I2
+        f1 = (self.m1*self.l1 + self.m2*self.L1)*self.g 
+        f2 = self.m2*self.l2*self.g    
+        
+        D = np.matrix([[d1, d2*math.cos(theta), d3*math.cos(phi)], 
+                [d2*math.cos(theta), d4, d5*math.cos(theta-phi)],
+                [d3*math.cos(phi), d5*math.cos(theta-phi), d6]])
+        
+        C = np.matrix([[0, -d2*math.sin(theta)*theta_dot, -d3*math.sin(phi)*phi_dot],
+                [0, 0, d5*math.sin(theta-phi)*phi_dot],
+                [0, -d5*math.sin(theta-phi)*theta_dot, 0]])
+                
+        G = np.matrix([[0], [-f1*math.sin(theta)], [-f2*math.sin(phi)]])
+        
+        H  = np.matrix([[1],[0],[0]])
+        
+        I = np.matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        O_3_3 = np.matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        O_3_1 = np.matrix([[0], [0], [0]])
+        
+        A_tilde = np.bmat([[O_3_3, I],[O_3_3, -np.linalg.inv(D)*C]])
+        B_tilde = np.bmat([[O_3_1],[np.linalg.inv(D)*H]])
+        W = np.bmat([[O_3_1],[np.linalg.inv(D)*G]])
+                
+                
+        
+        
+        
         x  = x + self.tau * x_dot
         x_dot = x_dot + self.tau * xacc
         theta = theta + self.tau * theta_dot
         theta_dot = theta_dot + self.tau * thetaacc
         self.state = (x,x_dot,theta,theta_dot)
+        
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
                 or theta < -self.theta_threshold_radians \
@@ -107,7 +137,7 @@ class CartPoleEnv(gym.Env):
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(6,))
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -179,7 +209,6 @@ class CartPoleEnv(gym.Env):
         cartx = x[0]*scale+screen_width/2.0 # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(-x[2])
-        print(-x[2])
         self.poletrans2.set_rotation(-x[2])
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')

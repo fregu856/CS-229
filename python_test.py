@@ -1,11 +1,12 @@
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
 gamma = 1
 alpha = 0.01
 action = 1
-w = [0,0,0,0,0,0,0,0,0,0,0,0,0]
+w = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 def normalize_angle(angle):
     """
@@ -20,18 +21,19 @@ def normalize_angle(angle):
     return normalized_angle
 
 def state_action_to_features(state, action):
-    x = state[0][0]
-    x_dot = state[1][0]
-    theta = state[2][0]
-    theta_dot = state[3][0]
-    phi = state[4][0]
-    phi_dot = state[5][0]
+    x = state.item(0)
+    theta = state.item(1)
+    phi = state.item(2)
+    x_dot = state.item(3)
+    theta_dot = state.item(4)
+    phi_dot = state.item(5)
     X = [normalize_angle(theta), theta % (2*np.pi),
             normalize_angle(phi), phi % (2*np.pi),
             abs(theta_dot), theta_dot,
             abs(phi_dot), phi_dot,
+            abs(x), x, abs(x_dot), x_dot,
             action*theta, action*phi,
-            action*x_dot, action*theta_dot, action*phi_dot]
+            action*x_dot, action*x, action*theta_dot, action*phi_dot]
     return X
 
 def q_hat(state, action, w):
@@ -40,7 +42,7 @@ def q_hat(state, action, w):
     return output
     
 def get_action(state, w):
-    actions = [-2,-1,0, 1,2]
+    actions = [-2,-1,0,1,2]
     qs = []
     for action in actions:
         qs.append(q_hat(state, action, w))
@@ -48,9 +50,10 @@ def get_action(state, w):
     action = actions[max_index]
     return action
 
-for i_episode in range(100000):
+timesteps = []
+for i_episode in range(100):
     state = env.reset()
-    for t in range(10000):
+    for t in range(100000):
         env.render()
         action = get_action(state, w)
         print(action)
@@ -60,9 +63,14 @@ for i_episode in range(100000):
         delta_w = alpha*(reward + gamma*q_hat(observation, get_action(observation, w), w) - q_hat(state, action, w))*state_action_to_features(state, action)
         w += delta_w
         
-        print(w)
+        #print(w)
         #print(reward)
         state = observation
+        print(state)
+        
         if done:
             print("Episode finished after " + str(t+1) + " timesteps")
+            timesteps += [t+1]
             break
+plt.plot(timesteps)
+plt.show()

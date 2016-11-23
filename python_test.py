@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
 gamma = 1
-alpha = 0.01
+alpha = 0.001
 action = 1
-w = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+w = np.array([1,1,1,1,1,1,1,1,1,1,1,1])
+delta_w = np.array([0,0,0,0,0,0,0,0,0])
 
 def normalize_angle(angle):
     """
@@ -27,13 +28,12 @@ def state_action_to_features(state, action):
     x_dot = state.item(3)
     theta_dot = state.item(4)
     phi_dot = state.item(5)
-    X = [normalize_angle(theta), theta % (2*np.pi),
+    X = np.array([normalize_angle(theta), theta % (2*np.pi),
             normalize_angle(phi), phi % (2*np.pi),
             abs(theta_dot), theta_dot,
             abs(phi_dot), phi_dot,
-            abs(x), x, abs(x_dot), x_dot,
             action*theta, action*phi,
-            action*x_dot, action*x, action*theta_dot, action*phi_dot]
+            action*theta_dot, action*phi_dot])
     return X
 
 def q_hat(state, action, w):
@@ -42,7 +42,7 @@ def q_hat(state, action, w):
     return output
     
 def get_action(state, w):
-    actions = [-2,-1,0,1,2]
+    actions = [-10,-2,-1,0,1,2,10]
     qs = []
     for action in actions:
         qs.append(q_hat(state, action, w))
@@ -51,7 +51,7 @@ def get_action(state, w):
     return action
 
 timesteps = []
-for i_episode in range(100):
+for i_episode in range(200):
     state = env.reset()
     for t in range(100000):
         env.render()
@@ -60,13 +60,12 @@ for i_episode in range(100):
         observation, reward, done, info = env.step(action)
         
         # update w
-        delta_w = alpha*(reward + gamma*q_hat(observation, get_action(observation, w), w) - q_hat(state, action, w))*state_action_to_features(state, action)
-        w += delta_w
+        delta_w = (alpha*(reward + gamma*q_hat(observation, get_action(observation, w), w) - q_hat(state, action, w)))*state_action_to_features(state, action)
+        w = np.add(w,delta_w)
         
-        #print(w)
+        print(w)
         #print(reward)
         state = observation
-        print(state)
         
         if done:
             print("Episode finished after " + str(t+1) + " timesteps")

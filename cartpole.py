@@ -12,7 +12,6 @@ import logging
 import math
 import gym
 from gym import spaces
-from gym.utils import seeding
 import numpy as np
 from scipy.integrate import ode
 sin = np.sin
@@ -27,7 +26,7 @@ class CartPoleEnv(gym.Env):
     }
 
     def __init__(self):
-        self.g = 9.81 # gravity constant
+        self.g = -9.81 # gravity constant
         self.m0 = 1.0 # mass of cart
         self.m1 = 0.5 # mass of pole 1
         self.m2 = 0.5 # mass of pole 2
@@ -53,12 +52,6 @@ class CartPoleEnv(gym.Env):
             self.theta_threshold_radians * 2,
             np.finfo(np.float32).max])
 
-        self.action_space = spaces.Discrete(3)
-        # # (continuous action space)
-        #self.action_space = spaces.Box(low=-0.1, high=0.1, shape=(1,))
-        self.observation_space = spaces.Box(-high, high)
-
-        self._seed()
         self.reset()
         self.viewer = None
 
@@ -66,23 +59,29 @@ class CartPoleEnv(gym.Env):
         self._configure()
 
     def _configure(self, display=None):
-        self.display = display
-
-    def _seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]    
+        self.display = display 
 
     def _step(self, action):
         #assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
         state = self.state
-        x, x_dot, theta, theta_dot, phi, phi_dot = state
+        x = state.item(0)
+        theta = state.item(1)
+        phi = state.item(2)
+        x_dot = state.item(3)
+        theta_dot = state.item(4)
+        phi_dot = state.item(5)
         u = action
         self.counter += 1
         
         # (state_dot = func(state))
         def func(t, state, u):
-            x, x_dot, theta, theta_dot, phi, phi_dot = state
-            state = np.matrix([[x],[x_dot],[theta],[theta_dot],[phi],[phi_dot]]) # this is needed for some weird reason
+            x = state.item(0)
+            theta = state.item(1)
+            phi = state.item(2)
+            x_dot = state.item(3)
+            theta_dot = state.item(4)
+            phi_dot = state.item(5)
+            state = np.matrix([[x],[theta],[phi],[x_dot],[theta_dot],[phi_dot]]) # this is needed for some weird reason
             
             d1 = self.m0 + self.m1 + self.m2
             d2 = self.m1*self.l1 + self.m2*self.L1
@@ -131,21 +130,21 @@ class CartPoleEnv(gym.Env):
         
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
-                or self.counter > 1000 \
-                or theta > 70*2*np.pi/360 \
-                or theta < -70*2*np.pi/360 
+                or self.counter > 10000 \
+                or theta > 10000*2*np.pi/360 \
+                or theta < -10000*2*np.pi/360 
         done = bool(done)
 
-        cost = 10*normalize_angle(theta) + abs(theta_dot) + \
-                10*normalize_angle(phi) + abs(phi_dot)
+        cost = 10*normalize_angle(theta) + \
+                10*normalize_angle(phi) + 10*abs(x)
         reward = -cost
         
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(6,1))
+        self.state = np.matrix([[0],[-0.05],[0],[0],[0],[0]])
         self.counter = 0
-        return np.array(self.state)
+        return self.state
 
     def _render(self, mode='human', close=False):
         if close:
@@ -212,10 +211,10 @@ class CartPoleEnv(gym.Env):
             self.viewer.add_geom(self.track)
 
         state = self.state
-        cartx = state[0]*scale+screen_width/2.0 # MIDDLE OF CART
+        cartx = state.item(0)*scale+screen_width/2.0 # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(-state[2])
-        self.poletrans2.set_rotation(-state[4])
+        self.poletrans.set_rotation(-state.item(1))
+        self.poletrans2.set_rotation(-(state.item(2)-state.item(1)))
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
         

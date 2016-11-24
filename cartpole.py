@@ -131,18 +131,19 @@ class CartPoleEnv(gym.Env):
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
                 or self.counter > 10000 \
-                or theta > 300*2*np.pi/360 \
-                or theta < -300*2*np.pi/360 
+                or theta > 90*2*np.pi/360 \
+                or theta < -90*2*np.pi/360 
         done = bool(done)
 
         cost = 10*normalize_angle(theta) + \
                 10*normalize_angle(phi)
+                
         reward = -cost
         
         return self.state, reward, done, {}
 
     def _reset(self):
-        self.state = np.matrix([[0],[np.pi],[np.pi],[0],[0],[0]])
+        self.state = np.matrix([[0],[np.random.uniform(-0.2,0.2)],[0],[0],[0],[0]])
         self.counter = 0
         return self.state
 

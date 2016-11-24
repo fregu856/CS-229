@@ -143,7 +143,7 @@ class CartPoleEnv(gym.Env):
         return self.state, reward, done, {}
 
     def _reset(self):
-        self.state = np.matrix([[0],[np.random.uniform(-0.2,0.2)],[0],[0],[0],[0]])
+        self.state = np.matrix([[0],[np.random.uniform(-0.1,0.1)],[0],[0],[0],[0]])
         self.counter = 0
         return self.state
 

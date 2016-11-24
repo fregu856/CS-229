@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
 gamma = 0.99
-alpha = 0.00001
+alpha = 0.0001
 action = 1
-w = np.array([1,1,1,1,1,1,1,1,1,1,1,1])
+w = np.array([-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54])
 delta_w = np.array([0,0,0,0,0,0,0,0,0,0,0])
 
 def normalize_angle(angle):
@@ -74,3 +74,5 @@ for i_episode in range(1000):
             break
 plt.plot(timesteps)
 plt.show()
+
+#[-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54]

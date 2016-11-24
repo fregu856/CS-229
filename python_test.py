@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
-gamma = 1
-alpha = 0.001
+gamma = 0.99
+alpha = 0.00001
 action = 1
 w = np.array([1,1,1,1,1,1,1,1,1,1,1,1])
-delta_w = np.array([0,0,0,0,0,0,0,0,0])
+delta_w = np.array([0,0,0,0,0,0,0,0,0,0,0])
 
 def normalize_angle(angle):
     """
@@ -41,8 +41,9 @@ def q_hat(state, action, w):
     output = np.dot(X,w)
     return output
     
+# epislon-greedy:
 def get_action(state, w):
-    actions = [-10,-2,-1,0,1,2,10]
+    actions = [-40, 40]
     qs = []
     for action in actions:
         qs.append(q_hat(state, action, w))
@@ -51,14 +52,14 @@ def get_action(state, w):
     return action
 
 timesteps = []
-for i_episode in range(200):
+for i_episode in range(1000):
     state = env.reset()
+    action = get_action(state, w)
     for t in range(100000):
         env.render()
         action = get_action(state, w)
-        print(action)
+        #print(action)
         observation, reward, done, info = env.step(action)
-        
         # update w
         delta_w = (alpha*(reward + gamma*q_hat(observation, get_action(observation, w), w) - q_hat(state, action, w)))*state_action_to_features(state, action)
         w = np.add(w,delta_w)

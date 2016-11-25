@@ -137,7 +137,7 @@ class CartPoleEnv(gym.Env):
 
         cost = 10*normalize_angle(theta) + \
                 10*normalize_angle(phi)
-                
+            
         reward = -cost
         
         return self.state, reward, done, {}

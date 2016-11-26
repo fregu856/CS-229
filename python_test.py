@@ -4,10 +4,25 @@ import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
 gamma = 0.99
-alpha = 0.000001
+alpha = 0.0001
 action = 1
-w = np.array([0, 0, 0, 0, 0, 0, 0, 0])
-delta_w = np.array([0,0,0,0,0,0,0,0])
+w = np.array([0,0,0,0,0,0,0,0,0,0,0,0])
+delta_w = np.array([0,0,0,0,0,0,0,0,0,0,0])
+
+def log(log_message):
+    """
+    
+    DESCRIPTION:
+    - Adds a log message "log_message" to a log file.
+    
+    """
+    
+    # open the log file and make sure that it's closed properly at the end of the 
+    # block, even if an exception occurs:
+    with open("C:/Users/Fregus/log.txt", "a") as log_file:
+        # write the log message to logfile:
+        log_file.write(log_message)
+        log_file.write("\n") # (so the next message is put on a new line)
 
 def normalize_angle(angle):
     """
@@ -28,8 +43,10 @@ def state_action_to_features(state, action):
     x_dot = state.item(3)
     theta_dot = state.item(4)
     phi_dot = state.item(5)
-    X = np.array([normalize_angle(theta),
-            normalize_angle(phi), theta*theta_dot, phi*phi_dot,
+    X = np.array([normalize_angle(theta), theta % (2*np.pi),
+            normalize_angle(phi), phi % (2*np.pi),
+            abs(theta_dot), theta_dot,
+            abs(phi_dot), phi_dot,
             action*theta, action*phi,
             action*theta_dot, action*phi_dot])
     return X
@@ -50,7 +67,7 @@ def get_action(state, w):
     return action
 
 timesteps = []
-for i_episode in range(1000):
+for i_episode in range(200):
     state = env.reset()
     action = get_action(state, w)
     for t in range(100000):
@@ -71,7 +88,7 @@ for i_episode in range(1000):
             timesteps += [t+1]
             break
 plt.plot(timesteps)
+log(str(timesteps))
 plt.show()
 
 #[-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54]
-#[0.67428356, -0.06215373, 0.71389644, -0.04985835, -0.35220665, 0.91792232, 0.03106055, 0.78030967, 0.12260051, -0.18088769, 0.00512933, -0.07230826]

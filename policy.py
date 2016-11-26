@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 env = gym.make("CartPole-v0")
 gamma = 0.99
 beta = 0.00001
-alpha = 0.00001
+alpha = 0.000001
 sigma = 0.001
 w = np.array([0, 0, 0, 0, 0, 0, 0, 0])
 delta_w = np.array([0,0,0,0,0,0,0,0])
@@ -22,7 +22,7 @@ def log(log_message):
     
     # open the log file and make sure that it's closed properly at the end of the 
     # block, even if an exception occurs:
-    with open("C:/Users/Fregus/log.txt", "a") as log_file:
+    with open("C:/Users/Fregus/log2.txt", "a") as log_file:
         # write the log message to logfile:
         log_file.write(log_message)
         log_file.write("\n") # (so the next message is put on a new line)
@@ -127,3 +127,8 @@ while True:
 
 #[-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54]
 #[0.67428356, -0.06215373, 0.71389644, -0.04985835, -0.35220665, 0.91792232, 0.03106055, 0.78030967, 0.12260051, -0.18088769, 0.00512933, -0.07230826]
+
+# w:
+# [-39.69998563, -35.37277748, -137.50845676, -76.0650973, -111.99402429, -26.29163286, -87.21205602, 0.72850579]
+# v:
+# [39.6331613, 16.97342259, 111.29048407, -2.59649649, 45.7345003, -7.5349689, 2.80431484, -23.8304194]

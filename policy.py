@@ -4,13 +4,28 @@ import matplotlib.pyplot as plt
 
 env = gym.make("CartPole-v0")
 gamma = 0.99
-beta = 0.000001
-alpha = 0.0001
+beta = 0.00001
+alpha = 0.00001
 sigma = 0.001
 w = np.array([0, 0, 0, 0, 0, 0, 0, 0])
 delta_w = np.array([0,0,0,0,0,0,0,0])
-v = np.array([0, 0, 0, 0, 0])
-delta_v = np.array([0,0,0,0,0])
+v = np.array([0,0,0,0,0,0,0,0])
+delta_v = np.array([0,0,0,0,0,0,0,0])
+
+def log(log_message):
+    """
+    
+    DESCRIPTION:
+    - Adds a log message "log_message" to a log file.
+    
+    """
+    
+    # open the log file and make sure that it's closed properly at the end of the 
+    # block, even if an exception occurs:
+    with open("C:/Users/Fregus/log.txt", "a") as log_file:
+        # write the log message to logfile:
+        log_file.write(log_message)
+        log_file.write("\n") # (so the next message is put on a new line)
 
 def sign(x):
     if (x > 0):
@@ -58,7 +73,13 @@ def phi_actor(state):
     x_dot = state.item(3)
     theta_dot = state.item(4)
     phi_dot = state.item(5)
-    phi_actor = np.array([theta, phi, theta_dot, phi_dot, sign(theta)])
+    ind1 = 0
+    ind2 = 0
+    if theta > 0 and phi < 0:
+        ind1 = 1
+    if theta < 0 and phi > 0:
+        ind2 = 1
+    phi_actor = np.array([theta, phi, theta_dot, phi_dot, sign(theta), sign(phi), ind1, ind2])
     return phi_actor
     
 def mu(state, v):
@@ -69,14 +90,12 @@ def mu(state, v):
 def get_action(state, v):
     mean = mu(s,v)
     action = np.random.normal(mean, sigma)
-    if action > 50:
-        action = 50
-    elif action < -50:
-        action = -50
+    if action > 40:
+        action = 40
+    elif action < -40:
+        action = -40
     return action
 
-timesteps = []
-counter = 1
 for i_episode in range(1000):
     s = env.reset()
     a = get_action(s, v)
@@ -96,16 +115,15 @@ for i_episode in range(1000):
         
         s = s_
         a = a_
-        counter += 1
         
         print(v)
         
         if done:
             print("Episode finished after " + str(t+1) + " timesteps")
-            timesteps += [t+1]
+            log(str(t+1))
+            log(str(w))
+            log(str(v))
             break
-plt.plot(timesteps)
-plt.show()
 
 #[-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54]
 #[0.67428356, -0.06215373, 0.71389644, -0.04985835, -0.35220665, 0.91792232, 0.03106055, 0.78030967, 0.12260051, -0.18088769, 0.00512933, -0.07230826]

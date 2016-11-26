@@ -130,7 +130,7 @@ class CartPoleEnv(gym.Env):
         
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
-                or self.counter > 300 \
+                or self.counter > 1000 \
                 or theta > 90*2*np.pi/360 \
                 or theta < -90*2*np.pi/360 
         done = bool(done)

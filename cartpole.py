@@ -131,13 +131,17 @@ class CartPoleEnv(gym.Env):
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
                 or self.counter > 1000 \
-                or theta > 90*2*np.pi/360 \
-                or theta < -90*2*np.pi/360 
+                or theta > 50*2*np.pi/360 \
+                or theta < -50*2*np.pi/360 \
+                or phi > 50*2*np.pi/360 \
+                or phi < -50*2*np.pi/360 
         done = bool(done)
 
         cost = 10*normalize_angle(theta) + \
                 10*normalize_angle(phi)
                 
+        if done:
+            cost = 100
         reward = -cost
         
         return self.state, reward, done, {}

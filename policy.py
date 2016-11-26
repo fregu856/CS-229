@@ -96,12 +96,12 @@ def get_action(state, v):
         action = -40
     return action
 
-for i_episode in range(1000):
+while True:
     s = env.reset()
     a = get_action(s, v)
     for t in range(100000):
-        env.render()
-        print(a)
+        #env.render()
+        #print(a)
         s_, r, done, info = env.step(a)
         a_ = get_action(s_,v)
         
@@ -116,10 +116,10 @@ for i_episode in range(1000):
         s = s_
         a = a_
         
-        print(v)
+        #print(v)
         
         if done:
-            print("Episode finished after " + str(t+1) + " timesteps")
+            #print("Episode finished after " + str(t+1) + " timesteps")
             log(str(t+1))
             log(str(w))
             log(str(v))

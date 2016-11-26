@@ -6,7 +6,7 @@ env = gym.make("CartPole-v0")
 gamma = 0.99
 alpha = 0.0001
 action = 1
-w = np.array([0,0,0,0,0,0,0,0,0,0,0,0])
+w = np.array([-3.26235474e+08,1.19486826e+07,-6.25423208e+08,8.44361669e+08,4.19343699e+08,-6.45561216e+07,-2.27575813e+09,7.80709627e+08, 6.43126956e+09,-8.54103946e+09,1.05744777e+08,-5.98016330e+08])
 delta_w = np.array([0,0,0,0,0,0,0,0,0,0,0])
 
 def log(log_message):
@@ -67,7 +67,7 @@ def get_action(state, w):
     return action
 
 timesteps = []
-for i_episode in range(200):
+for i_episode in range(160):
     state = env.reset()
     action = get_action(state, w)
     for t in range(100000):
@@ -79,16 +79,19 @@ for i_episode in range(200):
         delta_w = (alpha*(reward + gamma*q_hat(observation, get_action(observation, w), w) - q_hat(state, action, w)))*state_action_to_features(state, action)
         w = np.add(w,delta_w)
         
-        print(w)
+        #print(w)
         #print(reward)
         state = observation
         
         if done:
             print("Episode finished after " + str(t+1) + " timesteps")
             timesteps += [t+1]
+            #print(w)
             break
 plt.plot(timesteps)
 log(str(timesteps))
+log(str(w))
 plt.show()
 
 #[-6.46, -7.89, -8.74, -30.85, -30.07, -5.055,- 33.34, 23.09, 72.94, -38.84, 1.77, -55.54]
+#[-3.26235474e+08,1.19486826e+07,-6.25423208e+08,8.44361669e+08,4.19343699e+08,-6.45561216e+07,-2.27575813e+09,7.80709627e+08, 6.43126956e+09,-8.54103946e+09,1.05744777e+08,-5.98016330e+08]
